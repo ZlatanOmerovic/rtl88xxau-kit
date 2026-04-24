@@ -21,10 +21,11 @@ fi
 
 if dkms status 2>/dev/null | grep -q "^$PACKAGE_NAME/"; then
     versions=$(dkms status | awk -F'[/,]' -v p="$PACKAGE_NAME" '$1==p{print $2}' | sort -u)
-    for v in $versions; do
+    while IFS= read -r v; do
+        [[ -z "$v" ]] && continue
         log "dkms remove $PACKAGE_NAME/$v"
         dkms remove "$PACKAGE_NAME/$v" --all || true
-    done
+    done <<< "$versions"
 else
     log "$PACKAGE_NAME not in dkms tree — nothing to remove"
 fi

@@ -160,6 +160,10 @@ Contributions welcome — especially tested-adapter reports and distro coverage.
 
 All scripts are linted with `shellcheck` in CI across Debian 12, Debian 13, Ubuntu 22.04, and Ubuntu 24.04.
 
+## Security
+
+Running `install.sh` compiles and loads third-party kernel code as root via DKMS — a trust model you should be aware of before using this (or any similar DKMS-based driver). See [SECURITY.md](SECURITY.md) for the full threat model, how to report vulnerabilities, and notes on the `SRC_REPO` override and `diagnose.sh` output.
+
 ## License
 
 [MIT](LICENSE) © Zlatan Omerović

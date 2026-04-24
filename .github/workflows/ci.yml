@@ -6,10 +6,14 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   shellcheck:
     name: ShellCheck
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: Install shellcheck
@@ -22,6 +26,7 @@ jobs:
   syntax-check:
     name: bash -n (${{ matrix.image }})
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -46,6 +51,7 @@ jobs:
   dkms-precheck:
     name: DKMS availability (${{ matrix.image }})
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:

@@ -71,9 +71,10 @@ remove_stale_dkms() {
         log "removing stale $OLD_PACKAGE DKMS package"
         local versions v
         versions=$(dkms status | awk -F'[/,]' -v p="$OLD_PACKAGE" '$1==p{print $2}' | sort -u)
-        for v in $versions; do
+        while IFS= read -r v; do
+            [[ -z "$v" ]] && continue
             dkms remove "$OLD_PACKAGE/$v" --all 2>/dev/null || true
-        done
+        done <<< "$versions"
     fi
     if lsmod | awk '{print $1}' | grep -qx "$OLD_MODULE"; then
         log "unloading $OLD_MODULE module"

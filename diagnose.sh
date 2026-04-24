@@ -2,6 +2,11 @@
 # Capture a diagnostic snapshot for the Realtek USB wifi adapter.
 # Writes to /tmp/wifi-diagnose-TIMESTAMP.txt.
 # Run with sudo for full dmesg output.
+#
+# Output may contain MAC addresses, adapter serial numbers, and host
+# identifiers — restrict permissions to the invoking user.
+
+umask 077
 
 OUT="/tmp/wifi-diagnose-$(date +%Y%m%d-%H%M%S).txt"
 
