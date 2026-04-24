@@ -156,11 +156,7 @@ nmcli device status                      # NetworkManager sees it
 
 ## Contributing
 
-Contributions welcome — especially:
-
-- **Adding a tested adapter** to the compatibility table. Use the `New adapter confirmed working` issue template.
-- **Reporting breakage** on a new kernel or distro. Use the `Bug report` issue template and attach the `diagnose.sh` output.
-- **Pull requests** for: support for more adapters, clearer error messages, additional distro coverage in CI.
+Contributions welcome — especially tested-adapter reports and distro coverage. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to report bugs, add tested adapters, and open pull requests.
 
 All scripts are linted with `shellcheck` in CI across Debian 12, Debian 13, Ubuntu 22.04, and Ubuntu 24.04.
 
