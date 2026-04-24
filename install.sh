@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# Install the aircrack-ng realtek-rtl88xxau driver via DKMS.
-# Supports Realtek RTL8811/8812/8821/8814AU USB wifi adapters.
-# See README.md for context.
+# rtl88xxau-kit — install.sh
+#
+# Installs the aircrack-ng realtek-rtl88xxau driver via DKMS.
+# Supports Realtek RTL8811/8812/8821/8814AU USB Wi-Fi adapters on
+# Debian-based distros. See README.md for context and troubleshooting.
+#
+# https://github.com/ZlatanOmerovic/rtl88xxau-kit
 
 set -euo pipefail
 
-SRC_DIR="${SRC_DIR:-/home/zlatan/rtl8812au}"
 SRC_REPO="${SRC_REPO:-https://github.com/aircrack-ng/rtl8812au.git}"
 PACKAGE_NAME="realtek-rtl88xxau"
 MODULE_NAME="88XXau"
@@ -22,6 +25,32 @@ command -v dkms >/dev/null || die "dkms not installed (apt install dkms)"
 [[ -d "/lib/modules/$(uname -r)/build" ]] \
     || die "kernel headers missing for $(uname -r) — apt install linux-headers-$(uname -r)"
 
+resolve_src_dir() {
+    [[ -n "${SRC_DIR:-}" ]] && { printf '%s' "$SRC_DIR"; return; }
+
+    local script_dir sudo_home candidate
+    script_dir=$(dirname "$(readlink -f "$0")")
+    sudo_home=""
+    [[ -n "${SUDO_USER:-}" ]] && sudo_home=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+
+    for candidate in \
+        "$script_dir/../rtl8812au" \
+        "${sudo_home:+$sudo_home/rtl8812au}" \
+        "${HOME:-/root}/rtl8812au"
+    do
+        [[ -z "$candidate" ]] && continue
+        if [[ -f "$candidate/dkms.conf" ]]; then
+            printf '%s' "$candidate"
+            return
+        fi
+    done
+
+    # No existing source — pick a reasonable clone destination
+    printf '%s/rtl8812au' "${sudo_home:-${HOME:-/root}}"
+}
+
+SRC_DIR=$(resolve_src_dir)
+
 ensure_source() {
     if [[ -f "$SRC_DIR/dkms.conf" ]]; then
         log "using source at $SRC_DIR"
@@ -29,13 +58,18 @@ ensure_source() {
     fi
     command -v git >/dev/null || die "git not installed and no source at $SRC_DIR"
     log "cloning $SRC_REPO -> $SRC_DIR"
-    git clone --depth 1 "$SRC_REPO" "$SRC_DIR"
+    # Clone as the invoking user if possible, so ownership stays sensible
+    if [[ -n "${SUDO_USER:-}" ]] && command -v sudo >/dev/null; then
+        sudo -u "$SUDO_USER" git clone --depth 1 "$SRC_REPO" "$SRC_DIR"
+    else
+        git clone --depth 1 "$SRC_REPO" "$SRC_DIR"
+    fi
 }
 
 remove_stale_dkms() {
     if dkms status 2>/dev/null | grep -q "^$OLD_PACKAGE/"; then
         log "removing stale $OLD_PACKAGE DKMS package"
-        local versions
+        local versions v
         versions=$(dkms status | awk -F'[/,]' -v p="$OLD_PACKAGE" '$1==p{print $2}' | sort -u)
         for v in $versions; do
             dkms remove "$OLD_PACKAGE/$v" --all 2>/dev/null || true
@@ -85,10 +119,10 @@ verify() {
         fail=1
     fi
 
-    if modinfo "$MODULE_NAME" 2>/dev/null | grep -qi "v0BDA.*p0811"; then
-        echo "  ok: module advertises 0BDA:0811"
+    if modinfo "$MODULE_NAME" 2>/dev/null | grep -qi "alias.*v0BDA"; then
+        echo "  ok: module advertises Realtek (0BDA) USB IDs"
     else
-        warn "0BDA:0811 not in alias table (your adapter may be a different USB ID — check lsusb)"
+        warn "no 0BDA aliases found — your adapter may not be supported"
     fi
 
     if ip -br link show | awk '{print $1}' | grep -qE "^wl"; then
