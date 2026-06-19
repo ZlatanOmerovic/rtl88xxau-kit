@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install shellcheck
         run: |
           sudo apt-get update -qq
@@ -36,7 +36,7 @@ jobs:
           - ubuntu:22.04
           - ubuntu:24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: bash -n inside ${{ matrix.image }}
         run: |
           docker run --rm -v "$PWD:/work" -w /work "${{ matrix.image }}" \
@@ -61,7 +61,7 @@ jobs:
           - ubuntu:22.04
           - ubuntu:24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Verify dkms + git installable in ${{ matrix.image }}
         run: |
           docker run --rm "${{ matrix.image }}" bash -c '
